@@ -1,0 +1,153 @@
+##################  EXPERIMENT SETUP ################## 
+# Parameters that specify the setup of the feature and label matrices.
+# data folder: the folder to get the data from
+# cross_validation: controls parameters to use when validating a model during training, 
+#    num_folds: number of cross validation folds (uses stratfied k-fold)
+#    separate_latest: for temporal data, prior to cross validating, remove the most recent 
+#    temporal fold to use as a test set.
+# dataset_balancing: randomly drop the indicated percentage of non-adverse events to balance the dataset
+# dataset_comparisons: whether to include officer comparisons or not
+# labels: events to consider as serious adverse events (positive labels for the model)
+#         options are tier1, tier2, mh_tier1, mh_tier2 (mh = mental health)
+
+data_folder: '/Users/kerry/Documents/model_search/data' 
+cross_validation:
+    num_folds: 5
+
+	
+################## MODEL SELECTION ################## 
+# Model parameters to test during a grid search, parameters where multiple options are
+# to be tested should be in list format.
+# ---
+# "model" specifies the models that are to be tested. Available options are:
+#        'XGBoost', 'RandomForest', 'ExtraTrees', 'AdaBoost', 'LogisticRegression', 'SVM', 
+#        'GradientBoostingClassifier', 'DecisionTreeClassifier', 'SGDClassifier',
+#         'KNeighborsClassifier', 'BaggingClassifier'
+
+model_search:
+    model: ['ExtraTrees'] 
+    parameters:
+        XGBoost:
+            n_estimators: [50,500]
+            max_depth: [3, 6] 
+            gamma: [1, 5]
+            booster: ['gbtree']
+            scale_pos_weight: [1] 
+            min_child_weight: [1, 10] 
+            subsample: [0.1,0.5,1] 
+            colsample_bytree: [0.7, 1] 
+            learning_rate: [0.01]
+            random_state: [2193]
+            n_jobs: [-1]
+        RandomForest:
+            n_estimators: [50, 500] #, 100,1000] #[50,100, 1000, 10000]
+            max_depth: [3, 6] #[100, 5, 10, 50]
+            max_features: [16, 'auto'] #['log2', 4, 8, 16, "auto"]
+            criterion: ['gini'] #['gini', 'entropy']
+            class_weight:  ['balanced', 'None']
+            min_samples_split: [2] #[2, 5, 10]
+            random_state: [2193]
+            n_jobs: [-1]
+        ExtraTrees:
+            n_estimators: [50,500] 
+            max_depth:  [3] 
+            max_features:  [16] 
+            criterion: ['gini'] 
+            class_weight:  ['balanced']
+            min_samples_split:  [0.3] 
+            random_state: [2193]
+            n_jobs: [-1]
+        AdaBoost:
+            algorithm: ['SAMME', 'SAMME.R']
+            n_estimators: [50, 500]
+            learning_rate: [0.01]
+            random_state: [2193]
+        LogisticRegression:
+            C: [ 0.001, 0.01, 1, 10]
+            penalty: ['l1', 'l2']
+            random_state: [2193]
+        SVM:
+            C: [0.001, 0.1, 1, 10]
+            kernel: ['linear']
+            random_state: [2193]
+        GradientBoostingClassifier:
+            n_estimators: [50,100]
+            learning_rate: [0.01] #[0.001, 0.01, 0.05, 0.1, 0.5]
+            min_samples_split: [2]
+            subsample: [0.8] #[0.1, 0.5, 1.0]
+            max_depth: [2,3] #[1, 3, 5, 10, 20, 50, 100]
+            min_impurity_decrease: [0] #[0,0.2]
+            max_features: [16] #['log2', 4, 8, 16, "auto"]
+            random_state: [2193]
+        DecisionTreeClassifier:
+            criterion: ['gini', 'entropy']
+            max_depth: [1, 5, 10, 20]  # [50, 100]
+            max_features: ['sqrt', 'log2']
+            min_samples_split: [2, 5, 10]
+            random_state: [2193]
+        SGDClassifier:
+            loss: ['log', 'modified_huber']
+            penalty: ['l1', 'l2', 'elasticnet']
+            random_state: [2193]
+        KNeighborsClassifier:
+            n_neighbors: [1, 3, 5, 10, 25, 50, 100]
+            weights: ['uniform', 'distance']
+            algorithm: ['auto', 'kd_tree']
+        BaggingClassifier:
+            n_estimators: [50,100]
+            max_features: [16]
+            
+
+################## SINGLE MODEL ################## 
+# Model parameters to use once the right parameters have been found through grid search.
+# Each parameter can have only a single value.
+# ---
+model_single: 
+    model: ['ExtraTrees']
+    parameters:
+        RandomForest:
+            n_estimators: [50]
+            max_depth: [5]
+            max_features: [16]
+            criterion: ['gini']
+            class_weight:  ['balanced']
+            min_samples_split: [2] 
+            random_state: [71]
+            n_jobs: [-1]
+        XGBoost:
+            n_estimators: [1000]
+            max_depth: [3] 
+            gamma: [5]
+            booster: ['gbtree']
+            scale_pos_weight: [500]
+            min_child_weight: [20] 
+            subsample: [0.1] 
+            colsample_bytree: [0.7]
+            learning_rate: [0.01]
+            random_state: [2193]
+            n_jobs: [-1]
+        ExtraTrees:
+            n_estimators: [1000] 
+            max_depth:  [3] 
+            max_features:  [16] 
+            criterion: ['gini'] 
+            class_weight:  ['balanced']
+            min_samples_split:  [0.3] 
+            random_state: [2193]
+            n_jobs: [-1]
+        GradientBoostingClassifier:
+            n_estimators: [1000]
+            learning_rate: [0.01] 
+            min_samples_split: [2]
+            subsample: [0.4] 
+            max_depth: [3] 
+            min_impurity_decrease: [0] 
+            max_features: [16] 
+            random_state: [2193]
+            n_iter_no_change: [10]
+        AdaBoost:
+            algorithm: ['SAMME.R']
+            n_estimators: [100]
+            learning_rate: [0.01]
+            random_state: [2193]
+
