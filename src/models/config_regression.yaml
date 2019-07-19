@@ -1,0 +1,116 @@
+##################  EXPERIMENT SETUP ################## 
+# Parameters that specify the setup of the feature and label matrices.
+# data folder: the folder to get the data from
+# cross_validation: controls parameters to use when validating a model during training, 
+#    num_folds: number of cross validation folds (uses stratfied k-fold)
+#    separate_latest: for temporal data, prior to cross validating, remove the most recent 
+#    temporal fold to use as a test set.
+# dataset_balancing: randomly drop the indicated percentage of non-adverse events to balance the dataset
+# dataset_comparisons: whether to include officer comparisons or not
+# labels: events to consider as serious adverse events (positive labels for the model)
+#         options are tier1, tier2, mh_tier1, mh_tier2 (mh = mental health)
+
+data_folder: '/Users/kerry/Documents/model_search/data' 
+cross_validation:
+    num_folds: 5 
+    
+################## MODEL SELECTION ################## 
+# Model parameters to test during a grid search, parameters where multiple options are
+# to be tested should be in list format.
+# ---
+# "model" specifies the models that are to be tested. Available options are:
+#        'XGBoost', 'RandomForest', 'ExtraTrees', 'AdaBoost', 'LogisticRegression', 'SVM', 
+#        'GradientBoostingClassifier', 'DecisionTreeClassifier', 'SGDClassifier',
+#         'KNeighborsClassifier', 'BaggingClassifier'
+
+model_search:
+    model: ['XGBoost', 'RandomForest', 'ExtraTrees'] 
+    parameters:
+        XGBoost:
+            n_estimators: [50, 100]
+            max_depth: [3, 6] 
+            gamma: [1, 5]
+            booster: ['gbtree']
+            min_child_weight: [1, 10] 
+            subsample: [0.5,1] 
+            colsample_bytree: [0.5, 1] 
+            learning_rate: [0.01]
+            random_state: [2193]
+            n_jobs: [-1]
+        RandomForest:
+            n_estimators: [10, 100, 200]
+            max_depth: [3, 6] 
+            max_features: [0.5, 1.0] 
+            criterion: ['mse'] 
+            min_samples_split: [2] 
+            random_state: [2193]
+            n_jobs: [-1]
+        ExtraTrees:
+            n_estimators: [50, 100]
+            max_depth:  [3, 6] 
+            max_features:  [0.5, 1.0] 
+            criterion: ['mse'] 
+            min_samples_split:  [0.3] 
+            random_state: [2193]
+            n_jobs: [-1]
+        GradientBoosting:
+            learning_rate: [0.05, 0.1]
+            n_estimators: [50, 100]
+            subsample: [0.5, 1.0]
+            criterion: ['friedman_mse']
+            min_samples_split: [2, 4]
+            min_samples_leaf: [1]
+            min_weight_fraction_leaf: [0.]
+            max_features: ['auto', 'None']
+            alpha: [0.9]
+            max_leaf_nodes: ['None']
+            max_depth: [3, 6]
+            min_impurity_decrease: [0]
+            random_state: [2193]
+            n_jobs: [-1]
+   
+################## SINGLE MODEL ################## 
+# Model parameters to use once the right parameters have been found through grid search.
+# Each parameter can have only a single value.
+# ---
+model_single: 
+    model: ['ExtraTrees']
+    parameters:
+        XGBoost:
+            n_estimators: [1000]
+            max_depth: [3] 
+            gamma: [5]
+            booster: ['gbtree']
+            min_child_weight: [20] 
+            subsample: [0.1] 
+            colsample_bytree: [0.7]
+            learning_rate: [0.01]
+            random_state: [2193]
+            n_jobs: [-1]
+        RandomForest:
+            n_estimators: [50]
+            max_depth: [5]
+            max_features: [16]
+            criterion: ['gini']
+            min_samples_split: [2] 
+            random_state: [71]
+            n_jobs: [-1]
+        ExtraTrees:
+            n_estimators: [1000] 
+            max_depth:  [3] 
+            max_features:  [16] 
+            criterion: ['gini'] 
+            min_samples_split:  [0.3] 
+            random_state: [2193]
+            n_jobs: [-1]
+
+################## METRICS ################## 
+# define the metrics to be recorded during training and validation.
+# multiclass_average_strategy defines the strategy for combining label-wise 
+# metrics for multiclass labels.
+metrics:
+    explained_variance: True
+    max_error: False
+    mean_absolute_error: True
+    mean_squared_error: True
+    r2: True
